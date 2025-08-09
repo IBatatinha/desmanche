@@ -1,14 +1,10 @@
 fx_version 'cerulean'
 game 'gta5'
 
-shared_scripts {
-  -- '@vrp/lib/utils.lua',
-  'shared/main.lua',
-  'shared/config.lua'
-}
+shared_script '@vrp/lib/utils.lua'
 
-client_scripts {
-  'client/marker.lua'
-}
+client_scripts {}
 
-server_scripts {}
+server_scripts {
+  'server/creation.lua'
+}
