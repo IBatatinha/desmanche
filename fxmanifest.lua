@@ -9,5 +9,6 @@ shared_scripts {
 client_scripts {}
 
 server_scripts {
+  'server/db.lua',
   'server/creation.lua'
 }

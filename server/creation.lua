@@ -1,55 +1,88 @@
+batatinha.actions.prepare('desmanche/select_dismantle_user_creations', 'SELECT creations FROM batatinha_dismantle WHERE userId = @userId')
+
+--  variables
+
 local creation = {}
 
-local function registerPlayerCreationDismantleCommand(src) 
-  if not creation.getPlayerCommandExecuted(src) then return end
-  if creation:getPlayerAlreadyStartedDismantleCreation(src) then 
-    if creation:getPlayerPermission(src) then 
-      print('passou?')
-    end
+-- code
+
+RegisterCommand(batatinha.settings.command.name, function(src)
+  if creation:isCommandExecutedInServer(src) then return end
+  if not creation:isPlayerStartedSomeProcess(src) then return end
+  if creation:isPlayerHasPermission(src) and creation:isPlayerReachCreation(src) then 
+    creation:startPlaterCreationDismantle(src)
   end
+end)
+
+function creation:startPlaterCreationDismantle(src)
+  self.setPlayerState(src, 'creating', true)
 end
 
-function creation:getPlayerPermission(src)
-  if not self.getPlayerCommandAllowPermission() then
-    if self.getPlayerCommandPermissions() then 
-      for _, permissions in pairs(_config.settings.command.permission) do 
-        if self.isPlayerHasPermission(src, permissions) then 
-          return ''
-        end
-      end
+function creation:isPlayerReachCreation(src) 
+  if batatinha.settings.command.limitCreation then
+    if type(batatinha.settings.command.limitCreation) ~= 'number' then return end
+    if self.getPlayerLimit(src) >= batatinha.settings.command.limitCreation then 
+      TriggerClientEvent(batatinha.settings.notify.event, src, batatinha.settings.notify.types.denied, "You don't create more dismantles, because you reach in creation limit.", batatinha.settings.notify.defaultTime)
+      return
     end
-    return self.isPlayerHasPermission(src, tostring(_config.settings.command.permission))
   end
   return ''
 end
 
-function creation:getPlayerCommandAllowPermission() 
-  return type(_config.settings.command.permission) == 'boolean'
+
+function creation.getPlayerLimit(src)
+  local userId = batatinha.actions.getUserId(src)
+  local consult = batatinha.actions.query('desmanche/select_dismantle_user_creations', { userId = userId })
+
+  if consult[1] then
+    return batatinha.actions.parseInt(consult[1].creations)
+  end
+
+  return 0
 end
 
-function creation:getPlayerCommandPermissions() 
-  return type(_config.settings.command.permission) == 'table'
+--  functions
+
+function creation:isCommandExecutedInServer(src) 
+  return not self.getCommandExecuted(src)
 end
 
-function creation:isPlayerHasPermission(src, perm) 
-  local userId = _config.actions.getUserId(src);
-  return _config.actions.hasPermission(userId, perm)
+function creation.getCommandExecuted(src)
+  return src ~= 0
 end
 
-function creation:getPlayerAlreadyStartedDismantleCreation(src) 
-  if self.isPlayerAlreadyCreatingDismantle(src) then
-    TriggerClientEvent(_config.settings.notify.event, src, _config.settings.notify.types.denied, 'You already have one creation in process.', _config.settings.notify.time)
+function creation.getPlayerState(src, name)
+  return Player(src).state[tostring(name)]
+end
+
+function creation:isPlayerStartedSomeProcess(src)
+  if self.getPlayerState(src, 'creating') then
+    TriggerClientEvent(batatinha.settings.notify.event, src, batatinha.settings.notify.types.warning, 'You already have one creation  in process.', batatinha.settings.notify.defaultTime)
     return
   end
   return ''
 end
 
-function creation.isPlayerAlreadyCreatingDismantle(src) 
-  return Player(src).state.creatingStarted
+function creation.setPlayerState(src, name, value) 
+  if not value then return end
+  Player(src).state:set(tostring(name), value, true)
 end
 
-function creation.getPlayerCommandExecuted(src)
-  return src ~= 0
+function creation:isPlayerHasPermission(src) 
+  if batatinha.settings.command.permission then
+    if type(batatinha.settings.command.permission) == 'table' then
+      for _, permission in pairs(batatinha.settings.command.permission) do
+        if self.getPlayerPermission(src, permission) then
+          return ''
+        end
+      end
+    end
+    return self.getPlayerPermission(src, batatinha.settings.command.permission)
+  end
+  return ''
 end
 
-RegisterCommand(_config.settings.command.name, registerPlayerCreationDismantleCommand)
+function creation.getPlayerPermission(src, perm)
+  local userId = batatinha.actions.getUserId(src)
+  return batatinha.actions.hasPermission(userId, tostring(perm))
+end

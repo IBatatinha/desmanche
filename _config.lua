@@ -1,29 +1,46 @@
+-- framework
+
 local Proxy = module('vrp', 'lib/Proxy')
 local vRP = Proxy.getInterface('vRP')
 
-_config = {}
+-- tables
 
--- global settings 
+batatinha = {}
+batatinha.settings = {}
+batatinha.actions = {}
 
-_config.settings = {
-  command = { 
-    name = 'dismantle',
-    permission = {},
-  },
-  notify = { 
-    event = "Notify",
-    time = 5e3,
-    types = { 
-      success = "sucesso",
-      warning = "aviso",
-      denied = "negado",
-    }
+-- settings 
+
+batatinha.settings.command = {
+  name = 'dismantle',
+  permission = 'manager.permissao', -- comment this line, case you want disable the permission, but you want to put more permissions change the '' to {}.
+  limitCreation = 3
+}
+
+batatinha.settings.notify = {
+  event = 'Notify',
+  defaultTime = 5e3, 
+  types = { 
+    success = 'sucesso',
+    denied = 'negado',
+    warning = 'aviso'
   }
 }
 
--- functions
+-- framework functions 
 
-_config.actions = {
-  hasPermission = vRP.hasPermission,
-  getUserId = vRP.getUserId
-}
+batatinha.actions.hasPermission = vRP.hasPermission
+batatinha.actions.getUserId = vRP.getUserId
+batatinha.actions.prompt = vRP.prompt
+batatinha.actions.request = vRP.request
+batatinha.actions.prepare = vRP._prepare
+batatinha.actions.query = vRP.query
+batatinha.actions.execute = vRP._execute
+
+batatinha.actions.parseInt = function(value)
+  local number = tonumber(value)
+  if number then 
+    return math.floor(number)
+  end
+  return 0
+end
