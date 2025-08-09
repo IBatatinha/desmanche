@@ -1,7 +1,10 @@
 fx_version 'cerulean'
 game 'gta5'
 
-shared_script '@vrp/lib/utils.lua'
+shared_scripts {
+  '@vrp/lib/utils.lua',
+  '_config.lua'
+}
 
 client_scripts {}
 
